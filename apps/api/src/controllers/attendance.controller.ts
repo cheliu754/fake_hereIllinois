@@ -13,7 +13,6 @@ const UpdateAttendanceSchema = z.object({
   uin: z.string().min(1).optional(),
   sessionId: z.string().min(1).optional(),
   date: z.coerce.date().optional(),
-  takenBy: z.string().min(1).optional(),
   operationUser: z.string().min(1),
 });
 
@@ -47,6 +46,13 @@ export class AttendanceController {
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
+
+      // Reject attempts to modify takenBy field
+      if ('takenBy' in req.body) {
+        res.status(400).json({ error: 'Modifying takenBy field is not allowed' });
+        return;
+      }
+
       const result = UpdateAttendanceSchema.safeParse(req.body);
 
       if (!result.success) {

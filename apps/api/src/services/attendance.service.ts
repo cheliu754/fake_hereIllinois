@@ -75,6 +75,12 @@ export class AttendanceService {
           }
         }
 
+        // Skip update if no actual changes
+        if (changes.length === 0) {
+          updated = existing;
+          return;
+        }
+
         Object.assign(existing, data);
         updated = await existing.save({ session });
 

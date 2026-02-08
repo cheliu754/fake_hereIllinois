@@ -1,0 +1,31 @@
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Copy root package files
+COPY package.json yarn.lock ./
+COPY apps/api/package.json ./apps/api/
+
+# Install dependencies
+RUN yarn install --frozen-lockfile
+
+# Copy source code
+COPY apps/api ./apps/api
+
+# Build
+WORKDIR /app/apps/api
+RUN yarn build
+
+# Production stage
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy built files and dependencies
+COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/apps/api/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE 3001
+
+CMD ["node", "dist/app.js"]

@@ -1,0 +1,23 @@
+{
+  "name": "attendance-system",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "api": "yarn workspace @attendance/api",
+    "frontend": "yarn workspace @attendance/frontend",
+    "dev": "concurrently \"yarn api dev\" \"yarn frontend dev\"",
+    "build": "yarn workspaces run build",
+    "test": "yarn workspaces run test",
+    "lint": "yarn workspaces run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

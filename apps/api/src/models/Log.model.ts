@@ -17,9 +17,6 @@ export interface ILog {
 
   action: AuditAction;
 
-  affectedUin: string;
-  sessionId: string;
-
   changes: IChange[];
 
   before: IAttendance | null;
@@ -56,9 +53,6 @@ const LogSchema = new Schema<ILogDocument>(
 
     action: { type: String, enum: ["ADD", "EDIT", "REMOVE"], required: true },
 
-    affectedUin: { type: String, required: true },
-    sessionId: { type: String, required: true },
-
     changes: { type: [ChangeSchema], required: true, default: [] },
 
     before: {
@@ -76,8 +70,6 @@ const LogSchema = new Schema<ILogDocument>(
 );
 
 LogSchema.index({ operationTime: -1 });
-LogSchema.index({ affectedUin: 1, operationTime: -1 });
-LogSchema.index({ sessionId: 1, operationTime: -1 });
 LogSchema.index({ operationUser: 1, operationTime: -1 });
 LogSchema.index({ action: 1, operationTime: -1 });
 LogSchema.index({ attendanceId: 1, operationTime: -1 });

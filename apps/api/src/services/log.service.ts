@@ -6,8 +6,6 @@ export class LogService {
     attendanceId: string;
     operationUser: string;
     action: AuditAction;
-    affectedUin: string;
-    sessionId: string;
     changes?: IChange[];
     before?: IAttendance | null;
     after?: IAttendance | null;
@@ -17,8 +15,6 @@ export class LogService {
       operationUser: params.operationUser,
       operationTime: new Date(),
       action: params.action,
-      affectedUin: params.affectedUin,
-      sessionId: params.sessionId,
       changes: params.changes || [],
       before: params.before || null,
       after: params.after || null,
@@ -32,11 +28,11 @@ export class LogService {
   }
 
   async getLogsByUin(uin: string): Promise<ILog[]> {
-    return Log.find({ affectedUin: uin }).sort({ operationTime: -1 });
+    return Log.find({ 'after.uin': uin }).sort({ operationTime: -1 });
   }
 
   async getLogsBySessionId(sessionId: string): Promise<ILog[]> {
-    return Log.find({ sessionId }).sort({ operationTime: -1 });
+    return Log.find({ 'after.sessionId': sessionId }).sort({ operationTime: -1 });
   }
 }
 

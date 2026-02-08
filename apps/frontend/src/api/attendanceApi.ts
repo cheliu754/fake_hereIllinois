@@ -14,8 +14,6 @@ export interface ILog {
   operationUser: string;
   operationTime: string;
   action: 'ADD' | 'EDIT' | 'REMOVE';
-  affectedUin: string;
-  sessionId: string;
   changes: { field: string; oldValue: unknown; newValue: unknown }[];
   before: IAttendance | null;
   after: IAttendance | null;
@@ -40,7 +38,7 @@ export const attendanceApi = {
 
   update: async (id: string, data: Partial<IAttendance> & { operationUser: string }): Promise<IAttendance> => {
     const res = await fetch(`${API_BASE}/attendance/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });

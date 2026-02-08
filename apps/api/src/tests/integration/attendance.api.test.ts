@@ -299,14 +299,14 @@ describe('Functional Test: Instructor Editing Scenario', () => {
 
     // Verify ADD log for Adam
     const adamLog = logsRes.body.find(
-      (log: any) => log.affectedUin === 'Adam123' && log.action === 'ADD'
+      (log: any) => log.after?.uin === 'Adam123' && log.action === 'ADD'
     );
     expect(adamLog).toBeDefined();
     expect(adamLog.operationUser).toBe('Jack');
 
     // Verify EDIT log for Bob
     const bobEditLog = logsRes.body.find(
-      (log: any) => log.affectedUin === 'Bob456' && log.action === 'EDIT'
+      (log: any) => log.after?.uin === 'Bob456' && log.action === 'EDIT'
     );
     expect(bobEditLog).toBeDefined();
     expect(bobEditLog.operationUser).toBe('Jack');

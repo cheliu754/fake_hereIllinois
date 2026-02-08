@@ -22,8 +22,8 @@ function LogsTable({ logs }: Props) {
           <tr key={log._id}>
             <td>{new Date(log.operationTime).toLocaleString()}</td>
             <td>{log.action}</td>
-            <td>{log.affectedUin}</td>
-            <td>{log.sessionId}</td>
+            <td>{log.after?.uin || log.before?.uin || '-'}</td>
+            <td>{log.after?.sessionId || log.before?.sessionId || '-'}</td>
             <td>{log.operationUser}</td>
             <td>
               {log.changes.length > 0

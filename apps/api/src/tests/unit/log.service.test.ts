@@ -7,8 +7,6 @@ describe('LogService', () => {
         attendanceId: '507f1f77bcf86cd799439011',
         operationUser: 'instructor1',
         action: 'ADD',
-        affectedUin: '12345678',
-        sessionId: '20251001',
         changes: [],
         before: null,
         after: {
@@ -30,8 +28,6 @@ describe('LogService', () => {
         attendanceId: '507f1f77bcf86cd799439011',
         operationUser: 'Jack',
         action: 'EDIT',
-        affectedUin: '12345678',
-        sessionId: '20251001',
         changes: [
           { field: 'sessionId', oldValue: '20250931', newValue: '20251001' },
         ],
@@ -64,24 +60,32 @@ describe('LogService', () => {
         attendanceId: '507f1f77bcf86cd799439011',
         operationUser: 'user1',
         action: 'ADD',
-        affectedUin: '11111111',
-        sessionId: '20251001',
+        after: {
+          uin: '11111111',
+          sessionId: '20251001',
+          date: new Date(),
+          takenBy: 'instructor1',
+        },
       });
 
       await logService.createLog({
         attendanceId: '507f1f77bcf86cd799439012',
         operationUser: 'user2',
         action: 'ADD',
-        affectedUin: '22222222',
-        sessionId: '20251002',
+        after: {
+          uin: '22222222',
+          sessionId: '20251002',
+          date: new Date(),
+          takenBy: 'instructor1',
+        },
       });
 
       const logs = await logService.getAllLogs();
 
       expect(logs).toHaveLength(2);
       // Most recent first
-      expect(logs[0].affectedUin).toBe('22222222');
-      expect(logs[1].affectedUin).toBe('11111111');
+      expect(logs[0].after?.uin).toBe('22222222');
+      expect(logs[1].after?.uin).toBe('11111111');
     });
 
     it('should return empty array when no logs exist', async () => {
@@ -96,31 +100,43 @@ describe('LogService', () => {
         attendanceId: '507f1f77bcf86cd799439011',
         operationUser: 'user1',
         action: 'ADD',
-        affectedUin: '12345678',
-        sessionId: '20251001',
+        after: {
+          uin: '12345678',
+          sessionId: '20251001',
+          date: new Date(),
+          takenBy: 'instructor1',
+        },
       });
 
       await logService.createLog({
         attendanceId: '507f1f77bcf86cd799439012',
         operationUser: 'user1',
         action: 'EDIT',
-        affectedUin: '12345678',
-        sessionId: '20251001',
+        after: {
+          uin: '12345678',
+          sessionId: '20251001',
+          date: new Date(),
+          takenBy: 'instructor1',
+        },
       });
 
       await logService.createLog({
         attendanceId: '507f1f77bcf86cd799439013',
         operationUser: 'user1',
         action: 'ADD',
-        affectedUin: '87654321',
-        sessionId: '20251001',
+        after: {
+          uin: '87654321',
+          sessionId: '20251001',
+          date: new Date(),
+          takenBy: 'instructor1',
+        },
       });
 
       const logs = await logService.getLogsByUin('12345678');
 
       expect(logs).toHaveLength(2);
       logs.forEach(log => {
-        expect(log.affectedUin).toBe('12345678');
+        expect(log.after?.uin).toBe('12345678');
       });
     });
 
@@ -136,31 +152,43 @@ describe('LogService', () => {
         attendanceId: '507f1f77bcf86cd799439011',
         operationUser: 'user1',
         action: 'ADD',
-        affectedUin: '11111111',
-        sessionId: '20251001',
+        after: {
+          uin: '11111111',
+          sessionId: '20251001',
+          date: new Date(),
+          takenBy: 'instructor1',
+        },
       });
 
       await logService.createLog({
         attendanceId: '507f1f77bcf86cd799439012',
         operationUser: 'user1',
         action: 'ADD',
-        affectedUin: '22222222',
-        sessionId: '20251001',
+        after: {
+          uin: '22222222',
+          sessionId: '20251001',
+          date: new Date(),
+          takenBy: 'instructor1',
+        },
       });
 
       await logService.createLog({
         attendanceId: '507f1f77bcf86cd799439013',
         operationUser: 'user1',
         action: 'ADD',
-        affectedUin: '33333333',
-        sessionId: '20251002',
+        after: {
+          uin: '33333333',
+          sessionId: '20251002',
+          date: new Date(),
+          takenBy: 'instructor1',
+        },
       });
 
       const logs = await logService.getLogsBySessionId('20251001');
 
       expect(logs).toHaveLength(2);
       logs.forEach(log => {
-        expect(log.sessionId).toBe('20251001');
+        expect(log.after?.sessionId).toBe('20251001');
       });
     });
 

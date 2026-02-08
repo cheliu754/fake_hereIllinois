@@ -34,8 +34,8 @@ describe('Logs API', () => {
 
       expect(res.status).toBe(200);
       // Most recent first
-      expect(res.body[0].affectedUin).toBe('33333332');
-      expect(res.body[1].affectedUin).toBe('33333331');
+      expect(res.body[0].after.uin).toBe('33333332');
+      expect(res.body[1].after.uin).toBe('33333331');
     });
 
     it('should return empty array when no logs', async () => {
@@ -68,7 +68,7 @@ describe('Logs API', () => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(2); // ADD + EDIT
       res.body.forEach((log: any) => {
-        expect(log.affectedUin).toBe('44444444');
+        expect(log.after.uin).toBe('44444444');
       });
     });
 
@@ -99,7 +99,7 @@ describe('Logs API', () => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(2);
       res.body.forEach((log: any) => {
-        expect(log.sessionId).toBe('20251001');
+        expect(log.after.sessionId).toBe('20251001');
       });
     });
 

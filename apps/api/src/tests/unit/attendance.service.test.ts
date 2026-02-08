@@ -22,7 +22,7 @@ describe('AttendanceService', () => {
       const logs = await Log.find({ attendanceId: result._id.toString() });
       expect(logs).toHaveLength(1);
       expect(logs[0].action).toBe('ADD');
-      expect(logs[0].affectedUin).toBe(data.uin);
+      expect(logs[0].after?.uin).toBe(data.uin);
       expect(logs[0].before).toBeNull();
       expect(logs[0].after).toMatchObject({
         uin: data.uin,
@@ -74,7 +74,7 @@ describe('AttendanceService', () => {
 
       // Should still have only 1 attendance and 1 log
       const attendances = await Attendance.find({ uin: data.uin });
-      const logs = await Log.find({ affectedUin: data.uin });
+      const logs = await Log.find({ 'after.uin': data.uin });
       expect(attendances).toHaveLength(1);
       expect(logs).toHaveLength(1);
     });

@@ -18,8 +18,6 @@ export class AttendanceService {
           operationUser,
           operationTime: new Date(),
           action: 'ADD',
-          affectedUin: saved.uin,
-          sessionId: saved.sessionId,
           changes: [],
           before: null,
           after: {
@@ -96,8 +94,6 @@ export class AttendanceService {
           operationUser,
           operationTime: new Date(),
           action: 'EDIT',
-          affectedUin: updated.uin,
-          sessionId: updated.sessionId,
           changes,
           before,
           after,

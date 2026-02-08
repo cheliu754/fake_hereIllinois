@@ -11,7 +11,6 @@ RUN yarn install --frozen-lockfile
 
 # Copy source code
 COPY apps/frontend ./apps/frontend
-COPY deploy/.env ./deploy/.env
 
 # Build
 WORKDIR /app/apps/frontend

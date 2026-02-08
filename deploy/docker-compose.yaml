@@ -1,25 +1,22 @@
-version: '3.8'
+version: "3.8"
 
 services:
   traefik:
     image: traefik:v2.10
     command:
-      - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
     ports:
       - "80:80"
-      - "8080:8080"  # Traefik dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - app-network
+    restart: unless-stopped
 
   api:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile.api
+    image: ghcr.io/cheliu754/fake_hereIllinois-api:main
     env_file:
       - .env
     labels:
@@ -29,14 +26,13 @@ services:
       - "traefik.http.services.api.loadbalancer.server.port=3001"
       - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
       - "traefik.http.routers.api.middlewares=api-stripprefix"
-    restart: unless-stopped
     networks:
       - app-network
+    restart: unless-stopped
+    command: ["node", "dist/app.js"]
 
   frontend:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile.frontend
+    image: ghcr.io/cheliu754/fake_hereIllinois-frontend:main
     env_file:
       - .env
     labels:
@@ -47,9 +43,10 @@ services:
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     depends_on:
       - api
-    restart: unless-stopped
     networks:
       - app-network
+    restart: unless-stopped
+    command: ["serve", "-s", "dist", "-l", "3000"]
 
 networks:
   app-network:

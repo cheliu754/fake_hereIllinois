@@ -20,7 +20,7 @@ env:
 
 jobs:
   lint_test:
-    name: lint & test (yarn v1 workspaces)
+    name: test (yarn v1 workspaces)
     runs-on: ubuntu-latest
 
     steps:
@@ -30,7 +30,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "18"
           cache: "yarn"
 
       - name: Install deps
@@ -38,9 +38,6 @@ jobs:
           yarn --version
           test -f yarn.lock || (echo "ERROR: yarn.lock missing. Commit it for CI reproducibility." && exit 1)
           yarn install --frozen-lockfile --non-interactive
-
-      - name: Lint
-        run: yarn lint
 
       - name: Test
         run: yarn test

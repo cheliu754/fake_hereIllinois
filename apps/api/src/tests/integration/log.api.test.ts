@@ -55,7 +55,7 @@ describe('Logs API', () => {
 
       // Update it
       await request(app)
-        .put(`/api/attendance/${createRes.body._id}`)
+        .patch(`/api/attendance/${createRes.body._id}`)
         .send({ sessionId: '20251002', operationUser: 'instructor2' });
 
       // Create another attendance for different uin
@@ -128,12 +128,12 @@ describe('Functional Test: Logging Accountability', () => {
 
     // Perform multiple updates
     await request(app)
-      .put(`/api/attendance/${attendanceId}`)
+      .patch(`/api/attendance/${attendanceId}`)
       .send({ sessionId: '20251002', operationUser: 'editor1' });
 
     await request(app)
-      .put(`/api/attendance/${attendanceId}`)
-      .send({ takenBy: 'instructor2', operationUser: 'editor2' });
+      .patch(`/api/attendance/${attendanceId}`)
+      .send({ sessionId: '20251003', operationUser: 'editor2' });
 
     // Get all logs for this uin
     const logsRes = await request(app).get('/api/logs/uin/AuditTest');
@@ -155,11 +155,11 @@ describe('Functional Test: Logging Accountability', () => {
     expect(logs[1].before.sessionId).toBe('20251001');
     expect(logs[1].after.sessionId).toBe('20251002');
 
-    // Third log: EDIT takenBy
+    // Third log: EDIT sessionId again
     expect(logs[2].action).toBe('EDIT');
     expect(logs[2].operationUser).toBe('editor2');
-    expect(logs[2].before.takenBy).toBe('instructor1');
-    expect(logs[2].after.takenBy).toBe('instructor2');
+    expect(logs[2].before.sessionId).toBe('20251002');
+    expect(logs[2].after.sessionId).toBe('20251003');
   });
 
   it('should log before and after snapshots correctly', async () => {
@@ -172,14 +172,14 @@ describe('Functional Test: Logging Accountability', () => {
       });
 
     await request(app)
-      .put(`/api/attendance/${createRes.body._id}`)
+      .patch(`/api/attendance/${createRes.body._id}`)
       .send({
+        uin: 'SnapshotTestUpdated',
         sessionId: '20251002',
-        takenBy: 'instructor2',
         operationUser: 'admin',
       });
 
-    const logsRes = await request(app).get('/api/logs/uin/SnapshotTest');
+    const logsRes = await request(app).get('/api/logs/uin/SnapshotTestUpdated');
     const editLog = logsRes.body.find((l: any) => l.action === 'EDIT');
 
     // Verify before snapshot
@@ -188,8 +188,8 @@ describe('Functional Test: Logging Accountability', () => {
     expect(editLog.before.takenBy).toBe('instructor1');
 
     // Verify after snapshot
-    expect(editLog.after.uin).toBe('SnapshotTest');
+    expect(editLog.after.uin).toBe('SnapshotTestUpdated');
     expect(editLog.after.sessionId).toBe('20251002');
-    expect(editLog.after.takenBy).toBe('instructor2');
+    expect(editLog.after.takenBy).toBe('instructor1');
   });
 });

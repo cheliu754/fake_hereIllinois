@@ -96,7 +96,7 @@ describe('Attendance API', () => {
     });
   });
 
-  describe('PUT /api/attendance/:id', () => {
+  describe('PATCH /api/attendance/:id', () => {
     it('should update an existing attendance record', async () => {
       // Create initial record
       const createRes = await request(app)
@@ -109,7 +109,7 @@ describe('Attendance API', () => {
 
       // Update (scenario: Jack edits Bob's record from 20250931 to 20251001)
       const updateRes = await request(app)
-        .put(`/api/attendance/${createRes.body._id}`)
+        .patch(`/api/attendance/${createRes.body._id}`)
         .send({
           sessionId: '20251001',
           operationUser: 'Jack',
@@ -140,7 +140,7 @@ describe('Attendance API', () => {
         });
 
       const updateRes = await request(app)
-        .put(`/api/attendance/${createRes.body._id}`)
+        .patch(`/api/attendance/${createRes.body._id}`)
         .send({
           sessionId: '20251002',
         });
@@ -150,7 +150,7 @@ describe('Attendance API', () => {
 
     it('should return 404 when attendance not found', async () => {
       const res = await request(app)
-        .put('/api/attendance/507f1f77bcf86cd799439011')
+        .patch('/api/attendance/507f1f77bcf86cd799439011')
         .send({
           sessionId: '20251001',
           operationUser: 'instructor1',
@@ -169,22 +169,42 @@ describe('Attendance API', () => {
         });
 
       const updateRes = await request(app)
-        .put(`/api/attendance/${createRes.body._id}`)
+        .patch(`/api/attendance/${createRes.body._id}`)
         .send({
+          uin: '55555556',
           sessionId: '20251002',
-          takenBy: 'instructor2',
           operationUser: 'admin',
         });
 
       expect(updateRes.status).toBe(200);
+      expect(updateRes.body.uin).toBe('55555556');
       expect(updateRes.body.sessionId).toBe('20251002');
-      expect(updateRes.body.takenBy).toBe('instructor2');
 
       const logs = await Log.find({
         attendanceId: createRes.body._id,
         action: 'EDIT',
       });
       expect(logs[0].changes).toHaveLength(2);
+    });
+
+    it('should reject attempts to modify takenBy field', async () => {
+      const createRes = await request(app)
+        .post('/api/attendance')
+        .send({
+          uin: '55555557',
+          sessionId: '20251001',
+          takenBy: 'instructor1',
+        });
+
+      const updateRes = await request(app)
+        .patch(`/api/attendance/${createRes.body._id}`)
+        .send({
+          takenBy: 'instructor2',
+          operationUser: 'admin',
+        });
+
+      expect(updateRes.status).toBe(400);
+      expect(updateRes.body.error).toContain('takenBy');
     });
   });
 
@@ -262,7 +282,7 @@ describe('Functional Test: Instructor Editing Scenario', () => {
 
     // Step 3: Jack edits Bob's record (API 2: Edit)
     const bobEdited = await request(app)
-      .put(`/api/attendance/${bobInitial.body._id}`)
+      .patch(`/api/attendance/${bobInitial.body._id}`)
       .send({
         sessionId: '20251001', // Correct date
         operationUser: 'Jack',
@@ -316,7 +336,7 @@ describe('Functional Test: Instructor Editing Scenario', () => {
       });
 
     const res2 = await request(app)
-      .put(`/api/attendance/${createRes.body._id}`)
+      .patch(`/api/attendance/${createRes.body._id}`)
       .send({
         sessionId: '20251002',
         // Missing operationUser

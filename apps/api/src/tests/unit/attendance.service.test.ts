@@ -144,9 +144,8 @@ describe('AttendanceService', () => {
         action: 'EDIT'
       });
 
-      // Log is created but changes array should be empty
-      expect(logs).toHaveLength(1);
-      expect(logs[0].changes).toHaveLength(0);
+      // No log should be created when no actual changes
+      expect(logs).toHaveLength(0);
     });
 
     it('should track multiple field changes', async () => {
@@ -159,8 +158,8 @@ describe('AttendanceService', () => {
       await attendanceService.update(
         created._id.toString(),
         {
+          uin: '55555556',
           sessionId: '20251007',
-          takenBy: 'instructor2',
         },
         'admin'
       );
@@ -172,8 +171,8 @@ describe('AttendanceService', () => {
 
       expect(logs[0].changes).toHaveLength(2);
       const fields = logs[0].changes.map(c => c.field);
+      expect(fields).toContain('uin');
       expect(fields).toContain('sessionId');
-      expect(fields).toContain('takenBy');
     });
   });
 

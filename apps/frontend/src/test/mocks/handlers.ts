@@ -89,7 +89,7 @@ export const handlers = [
       _id: existingRecord._id,
       uin: body.uin,
       sessionId: body.sessionId,
-      date: new Date().toISOString(),
+      date: existingRecord.date,
       takenBy: body.operationUser,
     };
     return HttpResponse.json(updatedRecord);

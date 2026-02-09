@@ -107,9 +107,7 @@ describe('Attendance API', () => {
           takenBy: 'instructor1',
         });
 
-      const originalDate = createRes.body.date;
-
-      // PUT: full replacement (operationUser becomes takenBy, date recalculated)
+      // PUT: full replacement (operationUser becomes takenBy, date preserved)
       const updateRes = await request(app)
         .put(`/api/attendance/${createRes.body._id}`)
         .send({
@@ -121,7 +119,6 @@ describe('Attendance API', () => {
       expect(updateRes.status).toBe(200);
       expect(updateRes.body.sessionId).toBe('20251001');
       expect(updateRes.body.takenBy).toBe('Jack');
-      expect(updateRes.body.date).not.toBe(originalDate);
 
       // Verify log was created
       const logs = await Log.find({
@@ -133,7 +130,6 @@ describe('Attendance API', () => {
       const changeFields = logs[0].changes.map((c: any) => c.field);
       expect(changeFields).toContain('sessionId');
       expect(changeFields).toContain('takenBy');
-      expect(changeFields).toContain('date');
     });
 
     it('should return 400 when required fields are missing', async () => {
@@ -175,7 +171,7 @@ describe('Attendance API', () => {
       expect(res.status).toBe(404);
     });
 
-    it('should replace all fields and recalculate date', async () => {
+    it('should replace all fields and preserve date', async () => {
       const createRes = await request(app)
         .post('/api/attendance')
         .send({
@@ -183,6 +179,8 @@ describe('Attendance API', () => {
           sessionId: '20251001',
           takenBy: 'instructor1',
         });
+
+      const originalDate = createRes.body.date;
 
       const updateRes = await request(app)
         .put(`/api/attendance/${createRes.body._id}`)
@@ -196,13 +194,14 @@ describe('Attendance API', () => {
       expect(updateRes.body.uin).toBe('55555556');
       expect(updateRes.body.sessionId).toBe('20251002');
       expect(updateRes.body.takenBy).toBe('admin');
+      expect(updateRes.body.date).toBe(originalDate);
 
       const logs = await Log.find({
         attendanceId: createRes.body._id,
         action: 'EDIT',
       });
-      // uin, sessionId, takenBy, date all changed
-      expect(logs[0].changes.length).toBeGreaterThanOrEqual(3);
+      // uin, sessionId, takenBy changed (not date)
+      expect(logs[0].changes).toHaveLength(3);
     });
 
     it('should set operationUser as new takenBy', async () => {

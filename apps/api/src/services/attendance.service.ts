@@ -78,12 +78,16 @@ export class AttendanceService {
           }
         }
 
-        // Full replacement: overwrite all fields and reset date
+        // Full replacement: overwrite all fields, keep original date
         existing.uin = data.uin;
         existing.sessionId = data.sessionId;
         existing.takenBy = data.takenBy;
-        existing.date = new Date();
         updated = await existing.save({ session });
+
+        // Skip log if no actual changes
+        if (changes.length === 0) {
+          return;
+        }
 
         const after: IAttendance = {
           uin: updated.uin,
@@ -91,13 +95,6 @@ export class AttendanceService {
           date: updated.date,
           takenBy: updated.takenBy,
         };
-
-        // Always log for PUT (date always changes)
-        changes.push({
-          field: 'date',
-          oldValue: before.date,
-          newValue: updated.date,
-        });
 
         await Log.create([{
           attendanceId: id,

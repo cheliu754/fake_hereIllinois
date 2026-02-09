@@ -75,7 +75,7 @@ export const attendanceApi = {
     });
   },
 
-  // Update attendance record (PUT: full replacement, operationUser becomes takenBy, date is recalculated)
+  // Update attendance record (PUT: full replacement, operationUser becomes takenBy, date preserved)
   update: async (data: {
     id: string;
     uin: string;

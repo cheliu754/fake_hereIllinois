@@ -89,9 +89,7 @@ describe('AttendanceService', () => {
         takenBy: 'instructor1',
       }, 'instructor1');
 
-      const originalDate = created.date;
-
-      // PUT: full replacement (operationUser becomes takenBy, date recalculated)
+      // PUT: full replacement (operationUser becomes takenBy, date preserved)
       const updated = await attendanceService.update(
         created._id.toString(),
         { uin: '33333333', sessionId: '20251001', takenBy: 'Jack' },
@@ -101,7 +99,6 @@ describe('AttendanceService', () => {
       expect(updated).not.toBeNull();
       expect(updated!.sessionId).toBe('20251001');
       expect(updated!.takenBy).toBe('Jack');
-      expect(updated!.date).not.toEqual(originalDate);
 
       // Verify log was created with changes
       const logs = await Log.find({
@@ -113,7 +110,6 @@ describe('AttendanceService', () => {
       const changeFields = logs[0].changes.map((c: any) => c.field);
       expect(changeFields).toContain('sessionId');
       expect(changeFields).toContain('takenBy');
-      expect(changeFields).toContain('date');
       expect(logs[0].before?.sessionId).toBe('20250931');
       expect(logs[0].after?.sessionId).toBe('20251001');
     });
@@ -129,14 +125,14 @@ describe('AttendanceService', () => {
       expect(result).toBeNull();
     });
 
-    it('should always create log entry for PUT (date always changes)', async () => {
+    it('should not create log entry when no changes made', async () => {
       const created = await attendanceService.create({
         uin: '44444444',
         sessionId: '20251005',
         takenBy: 'instructor1',
       }, 'instructor1');
 
-      // PUT with same uin/sessionId/takenBy — date still changes
+      // PUT with same values — no changes
       await attendanceService.update(
         created._id.toString(),
         { uin: '44444444', sessionId: '20251005', takenBy: 'instructor1' },
@@ -148,10 +144,8 @@ describe('AttendanceService', () => {
         action: 'EDIT'
       });
 
-      // Log should be created because date always changes
-      expect(logs).toHaveLength(1);
-      const changeFields = logs[0].changes.map((c: any) => c.field);
-      expect(changeFields).toContain('date');
+      // No log should be created when no actual changes
+      expect(logs).toHaveLength(0);
     });
 
     it('should track all field changes', async () => {
@@ -176,13 +170,12 @@ describe('AttendanceService', () => {
         action: 'EDIT'
       });
 
-      // uin, sessionId, takenBy, date all changed
-      expect(logs[0].changes.length).toBeGreaterThanOrEqual(3);
+      // uin, sessionId, takenBy changed (not date)
+      expect(logs[0].changes).toHaveLength(3);
       const fields = logs[0].changes.map((c: any) => c.field);
       expect(fields).toContain('uin');
       expect(fields).toContain('sessionId');
       expect(fields).toContain('takenBy');
-      expect(fields).toContain('date');
     });
   });
 

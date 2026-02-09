@@ -67,13 +67,13 @@ yarn api test
 
 | API | Edge Cases Covered |
 |-----|-------------------|
-| **POST /api/attendance** | ✅ Success, ✅ Missing uin (400), ✅ Missing sessionId (400), ✅ Missing takenBy (400), ✅ Duplicate (409), ✅ Optional date |
-| **PATCH /api/attendance/:id** | ✅ Success, ✅ Missing operationUser (400), ✅ Not found (404), ✅ Multiple fields, ✅ Reject takenBy modification (400) |
-| **GET /api/attendance** | ✅ Returns all, ✅ Empty array |
-| **GET /api/attendance/:id** | ✅ Found, ✅ Not found (404) |
-| **GET /api/logs** | ✅ Returns all, ✅ Sorted descending, ✅ Empty array |
-| **GET /api/logs/uin/:uin** | ✅ Found, ✅ Not found |
-| **GET /api/logs/session/:sessionId** | ✅ Found, ✅ Not found |
+| **POST /attendance** | ✅ Success, ✅ Missing uin (400), ✅ Missing sessionId (400), ✅ Missing takenBy (400), ✅ Duplicate (409), ✅ Optional date |
+| **PATCH /attendance/:id** | ✅ Success, ✅ Missing operationUser (400), ✅ Not found (404), ✅ Multiple fields, ✅ Reject takenBy modification (400) |
+| **GET /attendance** | ✅ Returns all, ✅ Empty array |
+| **GET /attendance/:id** | ✅ Found, ✅ Not found (404) |
+| **GET /logs** | ✅ Returns all, ✅ Sorted descending, ✅ Empty array |
+| **GET /logs/uin/:uin** | ✅ Found, ✅ Not found |
+| **GET /logs/session/:sessionId** | ✅ Found, ✅ Not found |
 
 ### Functional Tests
 

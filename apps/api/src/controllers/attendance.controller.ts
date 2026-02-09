@@ -39,7 +39,7 @@ export class AttendanceController {
       res.status(201).json(attendance);
     } catch (error: any) {
       if (error.code === 11000) {
-        res.status(409).json({ error: 'Attendance record already exists' });
+        res.status(409).json({ error: 'This student\'s attendance has already been taken for this session' });
         return;
       }
       next(error);
@@ -78,7 +78,11 @@ export class AttendanceController {
       }
 
       res.json(updated);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.code === 11000) {
+        res.status(409).json({ error: 'This student\'s attendance has already been taken for this session' });
+        return;
+      }
       next(error);
     }
   }

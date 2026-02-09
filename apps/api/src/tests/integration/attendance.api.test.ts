@@ -77,7 +77,7 @@ describe('Attendance API', () => {
         });
 
       expect(res.status).toBe(409);
-      expect(res.body.error).toContain('exists');
+      expect(res.body.error).toContain('already been taken');
     });
 
     it('should accept optional date field', async () => {
@@ -223,6 +223,37 @@ describe('Attendance API', () => {
 
       expect(updateRes.status).toBe(200);
       expect(updateRes.body.takenBy).toBe('instructor2');
+    });
+
+    it('should return 409 when updating to duplicate uin+sessionId', async () => {
+      // Create two records
+      await request(app)
+        .post('/api/attendance')
+        .send({
+          uin: '66666661',
+          sessionId: '20251010',
+          takenBy: 'instructor1',
+        });
+
+      const second = await request(app)
+        .post('/api/attendance')
+        .send({
+          uin: '66666662',
+          sessionId: '20251010',
+          takenBy: 'instructor1',
+        });
+
+      // Try to update second record to match first record's uin+sessionId
+      const updateRes = await request(app)
+        .put(`/api/attendance/${second.body._id}`)
+        .send({
+          uin: '66666661',
+          sessionId: '20251010',
+          operationUser: 'admin',
+        });
+
+      expect(updateRes.status).toBe(409);
+      expect(updateRes.body.error).toContain('already been taken');
     });
   });
 

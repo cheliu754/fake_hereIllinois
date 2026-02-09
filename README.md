@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js >= 20.0.0
+- Node.js >= 24.0.0
 - Yarn 1.22.x
 - MongoDB (local or remote)
 
@@ -54,21 +54,61 @@ yarn frontend test:watch
 yarn api test
 ```
 
+## API Endpoints
+
+### POST /attendance
+Create a new attendance record.
+
+**Request body:** `{ uin, sessionId, takenBy, date? }`
+
+| Status | Description |
+|--------|-------------|
+| 201 | Created successfully |
+| 400 | Missing required fields (uin, sessionId, takenBy) |
+| 409 | "This student's attendance has already been taken for this session" |
+
+### PUT /attendance/:id
+Full replacement of an existing attendance record. `operationUser` becomes the new `takenBy`. `date` is preserved.
+
+**Request body:** `{ uin, sessionId, operationUser }`
+
+| Status | Description |
+|--------|-------------|
+| 200 | Updated successfully |
+| 400 | Missing required fields (uin, sessionId, operationUser) |
+| 404 | Attendance record not found |
+| 409 | "This student's attendance has already been taken for this session" (duplicate uin+sessionId) |
+
+### GET /attendance
+Returns all attendance records.
+
+### GET /attendance/:id
+Returns a single attendance record by ID.
+
+### GET /logs
+Returns all audit logs sorted by operationTime descending.
+
+### GET /logs/uin/:uin
+Returns logs for a specific UIN.
+
+### GET /logs/session/:sessionId
+Returns logs for a specific session.
+
 ## Test Coverage Summary
 
 ### Unit Tests (Service Layer)
 
 | Service | Test Cases |
 |---------|------------|
-| **AttendanceService** | 13 tests covering create, update, findById, findByUinAndSession, findAll |
-| **LogService** | 8 tests covering createLog, getAllLogs, getLogsByUin, getLogsBySessionId |
+| **AttendanceService** | create, update (full replacement), findById, findByUinAndSession, findAll |
+| **LogService** | createLog, getAllLogs, getLogsByUin, getLogsBySessionId |
 
 ### Integration/API Tests
 
 | API | Edge Cases Covered |
 |-----|-------------------|
 | **POST /attendance** | ✅ Success, ✅ Missing uin (400), ✅ Missing sessionId (400), ✅ Missing takenBy (400), ✅ Duplicate (409), ✅ Optional date |
-| **PATCH /attendance/:id** | ✅ Success, ✅ Missing operationUser (400), ✅ Not found (404), ✅ Multiple fields, ✅ Reject takenBy modification (400) |
+| **PUT /attendance/:id** | ✅ Full replacement, ✅ Missing required fields (400), ✅ Not found (404), ✅ Replace all fields + preserve date, ✅ operationUser becomes takenBy, ✅ Duplicate uin+sessionId (409) |
 | **GET /attendance** | ✅ Returns all, ✅ Empty array |
 | **GET /attendance/:id** | ✅ Found, ✅ Not found (404) |
 | **GET /logs** | ✅ Returns all, ✅ Sorted descending, ✅ Empty array |
@@ -79,9 +119,7 @@ yarn api test
 
 | Scenario | Description |
 |----------|-------------|
-| **Instructor Editing Scenario** | Jack adds Adam's attendance → Edits Bob's record → Views logs |
+| **Instructor Editing Scenario** | Jack adds Adam's attendance → Edits Bob's record (PUT full replacement) → Views logs |
 | **Rejection Scenario** | Missing required fields causes 400 errors |
 | **Logging Accountability** | Complete audit trail with multiple EDIT operations |
 | **Snapshot Verification** | Before/after states correctly recorded |
-
-All requirements are met with **47 passing tests** covering unit tests, API edge cases, and functional scenarios including rejection cases.

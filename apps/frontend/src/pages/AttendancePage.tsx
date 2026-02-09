@@ -112,7 +112,9 @@ export function AttendancePage() {
       console.log("[AttendancePage] Records refreshed");
     } catch (error) {
       console.error("[AttendancePage] Failed to update attendance record:", error);
-      if (error instanceof ApiError) {
+      if (error instanceof ApiError && error.status === 409) {
+        toast.error("This student's attendance has already been taken for this session");
+      } else if (error instanceof ApiError) {
         toast.error(`Failed to update record: ${error.message}`);
       } else {
         toast.error("Failed to update attendance record");

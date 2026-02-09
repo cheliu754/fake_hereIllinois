@@ -176,9 +176,9 @@ export function AttendancePage() {
       </div>
 
       <Scanner
-        open={scannerOpen}
+        isOpen={scannerOpen}
         onClose={() => setScannerOpen(false)}
-        onScan={handleScanSuccess}
+        onScanSuccess={handleScanSuccess}
       />
 
       <EditAttendanceDialog

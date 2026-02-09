@@ -16,6 +16,10 @@ const UpdateAttendanceSchema = z.object({
   operationUser: z.string().min(1),
 });
 
+const IdParamSchema = z.object({
+  id: z.string().min(1),
+});
+
 export class AttendanceController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -45,7 +49,14 @@ export class AttendanceController {
 
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { id } = req.params;
+      const idResult = IdParamSchema.safeParse(req.params);
+
+      if (!idResult.success) {
+        res.status(400).json({ error: idResult.error.flatten() });
+        return;
+      }
+
+      const { id } = idResult.data;
 
       // Reject attempts to modify takenBy field
       if ('takenBy' in req.body) {
@@ -86,7 +97,15 @@ export class AttendanceController {
 
   async findById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { id } = req.params;
+      const idResult = IdParamSchema.safeParse(req.params);
+
+      if (!idResult.success) {
+        res.status(400).json({ error: idResult.error.flatten() });
+        return;
+      }
+
+      const { id } = idResult.data;
+
       const record = await attendanceService.findById(id);
 
       if (!record) {

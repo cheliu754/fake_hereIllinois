@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js >= 18.0.0
+- Node.js >= 20.0.0
 - Yarn 1.22.x
 - MongoDB (local or remote)
 
@@ -43,11 +43,15 @@ yarn api start
 ## Running Tests
 
 ```bash
-# Run all tests with coverage
-npm test
+# Run all tests
+yarn test
 
-# Run tests in watch mode
-npm run test:watch
+# Frontend tests
+yarn frontend test
+yarn frontend test:watch
+
+# Backend tests
+yarn api test
 ```
 
 ## Test Coverage Summary

@@ -15,6 +15,10 @@
 yarn install
 ```
 
+## Set the Env File
+
+Checkout the .env.example in deploy/, rename it to .env, and set the corresponding value.
+
 ### Start Development Servers
 
 ```bash

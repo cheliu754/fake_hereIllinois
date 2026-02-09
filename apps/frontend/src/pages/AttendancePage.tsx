@@ -80,32 +80,15 @@ export function AttendancePage() {
     
     try {
       console.log("[AttendancePage] Updating record:", editingRecord._id, data);
-      
-      // Only send fields that should be updated
-      // takenBy is NOT allowed to be modified per API spec
-      const updatePayload: {
-        id: string;
-        uin?: string;
-        sessionId?: string;
-        date?: string;
-        operationUser: string;
-      } = {
+
+      // PUT: full replacement, send all required fields
+      const updatePayload = {
         id: editingRecord._id,
-        operationUser: data.operationUser,
+        uin: data.uin,
+        sessionId: data.sessionId,
+        operationUser: data.operationUser!,
       };
-      
-      // Only include fields that have changed
-      if (data.uin !== editingRecord.uin) {
-        updatePayload.uin = data.uin;
-      }
-      if (data.sessionId !== editingRecord.sessionId) {
-        updatePayload.sessionId = data.sessionId;
-      }
-      // Include date if it's in the data
-      if (data.date) {
-        updatePayload.date = data.date;
-      }
-      
+
       console.log("[AttendancePage] Sending update payload:", updatePayload);
       const response = await attendanceApi.update(updatePayload);
       console.log("[AttendancePage] Update response:", response);

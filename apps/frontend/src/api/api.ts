@@ -75,18 +75,16 @@ export const attendanceApi = {
     });
   },
 
-  // Update attendance record
+  // Update attendance record (PUT: full replacement, operationUser becomes takenBy, date is recalculated)
   update: async (data: {
     id: string;
-    uin?: string;
-    sessionId?: string;
-    date?: string;
+    uin: string;
+    sessionId: string;
     operationUser: string;
   }) => {
     const { id, ...updateData } = data;
-    // Note: takenBy is not allowed to be modified by the backend
     return fetchApi<any>(`/attendance/${id}`, {
-      method: "PATCH",
+      method: "PUT",
       body: JSON.stringify(updateData),
     });
   },

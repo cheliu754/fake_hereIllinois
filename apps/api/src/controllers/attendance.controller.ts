@@ -10,9 +10,8 @@ const CreateAttendanceSchema = z.object({
 });
 
 const UpdateAttendanceSchema = z.object({
-  uin: z.string().min(1).optional(),
-  sessionId: z.string().min(1).optional(),
-  date: z.coerce.date().optional(),
+  uin: z.string().min(1),
+  sessionId: z.string().min(1),
   operationUser: z.string().min(1),
 });
 
@@ -58,12 +57,6 @@ export class AttendanceController {
 
       const { id } = idResult.data;
 
-      // Reject attempts to modify takenBy field
-      if ('takenBy' in req.body) {
-        res.status(400).json({ error: 'Modifying takenBy field is not allowed' });
-        return;
-      }
-
       const result = UpdateAttendanceSchema.safeParse(req.body);
 
       if (!result.success) {
@@ -71,9 +64,13 @@ export class AttendanceController {
         return;
       }
 
-      const { operationUser, ...data } = result.data;
+      const { operationUser, uin, sessionId } = result.data;
 
-      const updated = await attendanceService.update(id, data, operationUser);
+      const updated = await attendanceService.update(
+        id,
+        { uin, sessionId, takenBy: operationUser },
+        operationUser
+      );
 
       if (!updated) {
         res.status(404).json({ error: 'Attendance record not found' });

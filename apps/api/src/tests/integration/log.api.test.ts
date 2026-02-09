@@ -53,10 +53,10 @@ describe('Logs API', () => {
         .post('/api/attendance')
         .send({ uin: '44444444', sessionId: '20251001', takenBy: 'instructor1' });
 
-      // Update it
+      // Update it (PUT: full replacement)
       await request(app)
-        .patch(`/api/attendance/${createRes.body._id}`)
-        .send({ sessionId: '20251002', operationUser: 'instructor2' });
+        .put(`/api/attendance/${createRes.body._id}`)
+        .send({ uin: '44444444', sessionId: '20251002', operationUser: 'instructor2' });
 
       // Create another attendance for different uin
       await request(app)
@@ -126,14 +126,14 @@ describe('Functional Test: Logging Accountability', () => {
 
     const attendanceId = createRes.body._id;
 
-    // Perform multiple updates
+    // Perform multiple updates (PUT: full replacement)
     await request(app)
-      .patch(`/api/attendance/${attendanceId}`)
-      .send({ sessionId: '20251002', operationUser: 'editor1' });
+      .put(`/api/attendance/${attendanceId}`)
+      .send({ uin: 'AuditTest', sessionId: '20251002', operationUser: 'editor1' });
 
     await request(app)
-      .patch(`/api/attendance/${attendanceId}`)
-      .send({ sessionId: '20251003', operationUser: 'editor2' });
+      .put(`/api/attendance/${attendanceId}`)
+      .send({ uin: 'AuditTest', sessionId: '20251003', operationUser: 'editor2' });
 
     // Get all logs for this uin
     const logsRes = await request(app).get('/api/logs/uin/AuditTest');
@@ -172,7 +172,7 @@ describe('Functional Test: Logging Accountability', () => {
       });
 
     await request(app)
-      .patch(`/api/attendance/${createRes.body._id}`)
+      .put(`/api/attendance/${createRes.body._id}`)
       .send({
         uin: 'SnapshotTestUpdated',
         sessionId: '20251002',
@@ -187,9 +187,9 @@ describe('Functional Test: Logging Accountability', () => {
     expect(editLog.before.sessionId).toBe('20251001');
     expect(editLog.before.takenBy).toBe('instructor1');
 
-    // Verify after snapshot
+    // Verify after snapshot (operationUser becomes takenBy)
     expect(editLog.after.uin).toBe('SnapshotTestUpdated');
     expect(editLog.after.sessionId).toBe('20251002');
-    expect(editLog.after.takenBy).toBe('instructor1');
+    expect(editLog.after.takenBy).toBe('admin');
   });
 });

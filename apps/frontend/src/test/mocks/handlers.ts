@@ -73,13 +73,12 @@ export const handlers = [
     return HttpResponse.json(newRecord, { status: 201 });
   }),
 
-  // PATCH /attendance/:id - Update attendance record
-  http.patch(`${API_BASE_URL}/attendance/:id`, async ({ params, request }) => {
+  // PUT /attendance/:id - Update attendance record
+  http.put(`${API_BASE_URL}/attendance/:id`, async ({ params, request }) => {
     const { id } = params;
     const body = (await request.json()) as {
-      uin?: string;
-      sessionId?: string;
-      date?: string;
+      uin: string;
+      sessionId: string;
       operationUser: string;
     };
     const existingRecord = mockAttendanceRecords.find((r) => r._id === id);
@@ -87,8 +86,11 @@ export const handlers = [
       return HttpResponse.json({ message: "Not found" }, { status: 404 });
     }
     const updatedRecord = {
-      ...existingRecord,
-      ...body,
+      _id: existingRecord._id,
+      uin: body.uin,
+      sessionId: body.sessionId,
+      date: new Date().toISOString(),
+      takenBy: body.operationUser,
     };
     return HttpResponse.json(updatedRecord);
   }),

@@ -96,8 +96,8 @@ describe('Attendance API', () => {
     });
   });
 
-  describe('PATCH /api/attendance/:id', () => {
-    it('should update an existing attendance record', async () => {
+  describe('PUT /api/attendance/:id', () => {
+    it('should fully replace an existing attendance record', async () => {
       // Create initial record
       const createRes = await request(app)
         .post('/api/attendance')
@@ -107,16 +107,21 @@ describe('Attendance API', () => {
           takenBy: 'instructor1',
         });
 
-      // Update (scenario: Jack edits Bob's record from 20250931 to 20251001)
+      const originalDate = createRes.body.date;
+
+      // PUT: full replacement (operationUser becomes takenBy, date recalculated)
       const updateRes = await request(app)
-        .patch(`/api/attendance/${createRes.body._id}`)
+        .put(`/api/attendance/${createRes.body._id}`)
         .send({
+          uin: '33333333',
           sessionId: '20251001',
           operationUser: 'Jack',
         });
 
       expect(updateRes.status).toBe(200);
       expect(updateRes.body.sessionId).toBe('20251001');
+      expect(updateRes.body.takenBy).toBe('Jack');
+      expect(updateRes.body.date).not.toBe(originalDate);
 
       // Verify log was created
       const logs = await Log.find({
@@ -125,12 +130,13 @@ describe('Attendance API', () => {
       });
       expect(logs).toHaveLength(1);
       expect(logs[0].operationUser).toBe('Jack');
-      expect(logs[0].changes[0].field).toBe('sessionId');
-      expect(logs[0].changes[0].oldValue).toBe('20250931');
-      expect(logs[0].changes[0].newValue).toBe('20251001');
+      const changeFields = logs[0].changes.map((c: any) => c.field);
+      expect(changeFields).toContain('sessionId');
+      expect(changeFields).toContain('takenBy');
+      expect(changeFields).toContain('date');
     });
 
-    it('should return 400 when operationUser is missing', async () => {
+    it('should return 400 when required fields are missing', async () => {
       const createRes = await request(app)
         .post('/api/attendance')
         .send({
@@ -139,19 +145,29 @@ describe('Attendance API', () => {
           takenBy: 'instructor1',
         });
 
-      const updateRes = await request(app)
-        .patch(`/api/attendance/${createRes.body._id}`)
+      // Missing uin and operationUser
+      const res1 = await request(app)
+        .put(`/api/attendance/${createRes.body._id}`)
         .send({
           sessionId: '20251002',
         });
+      expect(res1.status).toBe(400);
 
-      expect(updateRes.status).toBe(400);
+      // Missing sessionId
+      const res2 = await request(app)
+        .put(`/api/attendance/${createRes.body._id}`)
+        .send({
+          uin: '44444444',
+          operationUser: 'admin',
+        });
+      expect(res2.status).toBe(400);
     });
 
     it('should return 404 when attendance not found', async () => {
       const res = await request(app)
-        .patch('/api/attendance/507f1f77bcf86cd799439011')
+        .put('/api/attendance/507f1f77bcf86cd799439011')
         .send({
+          uin: '99999999',
           sessionId: '20251001',
           operationUser: 'instructor1',
         });
@@ -159,7 +175,7 @@ describe('Attendance API', () => {
       expect(res.status).toBe(404);
     });
 
-    it('should update multiple fields at once', async () => {
+    it('should replace all fields and recalculate date', async () => {
       const createRes = await request(app)
         .post('/api/attendance')
         .send({
@@ -169,7 +185,7 @@ describe('Attendance API', () => {
         });
 
       const updateRes = await request(app)
-        .patch(`/api/attendance/${createRes.body._id}`)
+        .put(`/api/attendance/${createRes.body._id}`)
         .send({
           uin: '55555556',
           sessionId: '20251002',
@@ -179,15 +195,17 @@ describe('Attendance API', () => {
       expect(updateRes.status).toBe(200);
       expect(updateRes.body.uin).toBe('55555556');
       expect(updateRes.body.sessionId).toBe('20251002');
+      expect(updateRes.body.takenBy).toBe('admin');
 
       const logs = await Log.find({
         attendanceId: createRes.body._id,
         action: 'EDIT',
       });
-      expect(logs[0].changes).toHaveLength(2);
+      // uin, sessionId, takenBy, date all changed
+      expect(logs[0].changes.length).toBeGreaterThanOrEqual(3);
     });
 
-    it('should reject attempts to modify takenBy field', async () => {
+    it('should set operationUser as new takenBy', async () => {
       const createRes = await request(app)
         .post('/api/attendance')
         .send({
@@ -197,14 +215,15 @@ describe('Attendance API', () => {
         });
 
       const updateRes = await request(app)
-        .patch(`/api/attendance/${createRes.body._id}`)
+        .put(`/api/attendance/${createRes.body._id}`)
         .send({
-          takenBy: 'instructor2',
-          operationUser: 'admin',
+          uin: '55555557',
+          sessionId: '20251001',
+          operationUser: 'instructor2',
         });
 
-      expect(updateRes.status).toBe(400);
-      expect(updateRes.body.error).toContain('takenBy');
+      expect(updateRes.status).toBe(200);
+      expect(updateRes.body.takenBy).toBe('instructor2');
     });
   });
 
@@ -280,16 +299,18 @@ describe('Functional Test: Instructor Editing Scenario', () => {
 
     expect(bobInitial.status).toBe(201);
 
-    // Step 3: Jack edits Bob's record (API 2: Edit)
+    // Step 3: Jack edits Bob's record (PUT: full replacement)
     const bobEdited = await request(app)
-      .patch(`/api/attendance/${bobInitial.body._id}`)
+      .put(`/api/attendance/${bobInitial.body._id}`)
       .send({
+        uin: 'Bob456',
         sessionId: '20251001', // Correct date
         operationUser: 'Jack',
       });
 
     expect(bobEdited.status).toBe(200);
     expect(bobEdited.body.sessionId).toBe('20251001');
+    expect(bobEdited.body.takenBy).toBe('Jack');
 
     // Step 4: Jack views the logs (API 3: View logs)
     const logsRes = await request(app).get('/api/logs');
@@ -326,7 +347,7 @@ describe('Functional Test: Instructor Editing Scenario', () => {
       });
     expect(res1.status).toBe(400);
 
-    // Missing operationUser on update
+    // Missing required fields on PUT update
     const createRes = await request(app)
       .post('/api/attendance')
       .send({
@@ -336,10 +357,10 @@ describe('Functional Test: Instructor Editing Scenario', () => {
       });
 
     const res2 = await request(app)
-      .patch(`/api/attendance/${createRes.body._id}`)
+      .put(`/api/attendance/${createRes.body._id}`)
       .send({
         sessionId: '20251002',
-        // Missing operationUser
+        // Missing uin and operationUser
       });
     expect(res2.status).toBe(400);
   });

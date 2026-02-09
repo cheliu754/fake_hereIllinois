@@ -12,13 +12,13 @@ import { Button } from "../plugin-ui/button";
 import { Input } from "../plugin-ui/input";
 import { Label } from "../plugin-ui/label";
 import { Badge } from "../plugin-ui/badge";
-import type { Attendance } from "../models/Attendance.model";
+import type { Attendance, AttendanceFormData } from "../models/Attendance.model";
 
 interface EditAttendanceDialogProps {
   record: Attendance | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: Attendance) => Promise<void>;
+  onSubmit: (data: AttendanceFormData) => Promise<void>;
 }
 
 export function EditAttendanceDialog({
@@ -27,7 +27,7 @@ export function EditAttendanceDialog({
   onOpenChange,
   onSubmit,
 }: EditAttendanceDialogProps) {
-  const [formData, setFormData] = useState<Attendance>({
+  const [formData, setFormData] = useState<AttendanceFormData>({
     uin: "",
     sessionId: "",
     takenBy: "",
@@ -50,7 +50,7 @@ export function EditAttendanceDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.uin || !formData.sessionId || !formData.takenBy || !formData.operationUser) {
+    if (!formData.uin || !formData.sessionId || !formData.operationUser) {
       return;
     }
 
@@ -66,7 +66,7 @@ export function EditAttendanceDialog({
     }
   };
 
-  const handleChange = (field: keyof Attendance, value: string) => {
+  const handleChange = (field: keyof AttendanceFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -138,10 +138,10 @@ export function EditAttendanceDialog({
               />
             </div>
 
-            {/* Taken By Field - Badge Display */}
+            {/* Original Taken By - Badge Display */}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">
-                Taken By
+                Original Taken By
               </Label>
               <div className="flex items-center">
                 <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 px-2 py-0.5 text-xs border border-blue-200">
@@ -150,10 +150,10 @@ export function EditAttendanceDialog({
               </div>
             </div>
 
-            {/* Operation User Field */}
+            {/* Operation User Field (becomes new takenBy) */}
             <div className="space-y-2">
               <Label htmlFor="edit-operationUser" className="text-sm font-medium text-gray-700">
-                Operation User *
+                Operation User (New Taken By) *
               </Label>
               <Input
                 id="edit-operationUser"
@@ -182,7 +182,6 @@ export function EditAttendanceDialog({
                   isSubmitting ||
                   !formData.uin ||
                   !formData.sessionId ||
-                  !formData.takenBy ||
                   !formData.operationUser
                 }
                 className="bg-[#E84A27] hover:bg-[#d43f1f] text-white"

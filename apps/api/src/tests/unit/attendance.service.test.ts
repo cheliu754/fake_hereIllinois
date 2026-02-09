@@ -81,7 +81,7 @@ describe('AttendanceService', () => {
   });
 
   describe('update', () => {
-    it('should update attendance record and create log with changes', async () => {
+    it('should fully replace attendance record and create log with changes', async () => {
       // Create initial record
       const created = await attendanceService.create({
         uin: '33333333',
@@ -89,15 +89,19 @@ describe('AttendanceService', () => {
         takenBy: 'instructor1',
       }, 'instructor1');
 
-      // Update sessionId (the scenario from task: Bob's record from 20250931 to 20251001)
+      const originalDate = created.date;
+
+      // PUT: full replacement (operationUser becomes takenBy, date recalculated)
       const updated = await attendanceService.update(
         created._id.toString(),
-        { sessionId: '20251001' },
+        { uin: '33333333', sessionId: '20251001', takenBy: 'Jack' },
         'Jack'
       );
 
       expect(updated).not.toBeNull();
       expect(updated!.sessionId).toBe('20251001');
+      expect(updated!.takenBy).toBe('Jack');
+      expect(updated!.date).not.toEqual(originalDate);
 
       // Verify log was created with changes
       const logs = await Log.find({
@@ -106,10 +110,10 @@ describe('AttendanceService', () => {
       });
       expect(logs).toHaveLength(1);
       expect(logs[0].operationUser).toBe('Jack');
-      expect(logs[0].changes).toHaveLength(1);
-      expect(logs[0].changes[0].field).toBe('sessionId');
-      expect(logs[0].changes[0].oldValue).toBe('20250931');
-      expect(logs[0].changes[0].newValue).toBe('20251001');
+      const changeFields = logs[0].changes.map((c: any) => c.field);
+      expect(changeFields).toContain('sessionId');
+      expect(changeFields).toContain('takenBy');
+      expect(changeFields).toContain('date');
       expect(logs[0].before?.sessionId).toBe('20250931');
       expect(logs[0].after?.sessionId).toBe('20251001');
     });
@@ -118,24 +122,24 @@ describe('AttendanceService', () => {
       const fakeId = '507f1f77bcf86cd799439011';
       const result = await attendanceService.update(
         fakeId,
-        { sessionId: '20251001' },
+        { uin: '99999999', sessionId: '20251001', takenBy: 'instructor1' },
         'instructor1'
       );
 
       expect(result).toBeNull();
     });
 
-    it('should not create log entry when no changes made', async () => {
+    it('should always create log entry for PUT (date always changes)', async () => {
       const created = await attendanceService.create({
         uin: '44444444',
         sessionId: '20251005',
         takenBy: 'instructor1',
       }, 'instructor1');
 
-      // Update with same values
+      // PUT with same uin/sessionId/takenBy — date still changes
       await attendanceService.update(
         created._id.toString(),
-        { sessionId: '20251005' },
+        { uin: '44444444', sessionId: '20251005', takenBy: 'instructor1' },
         'instructor1'
       );
 
@@ -144,11 +148,13 @@ describe('AttendanceService', () => {
         action: 'EDIT'
       });
 
-      // No log should be created when no actual changes
-      expect(logs).toHaveLength(0);
+      // Log should be created because date always changes
+      expect(logs).toHaveLength(1);
+      const changeFields = logs[0].changes.map((c: any) => c.field);
+      expect(changeFields).toContain('date');
     });
 
-    it('should track multiple field changes', async () => {
+    it('should track all field changes', async () => {
       const created = await attendanceService.create({
         uin: '55555555',
         sessionId: '20251006',
@@ -160,6 +166,7 @@ describe('AttendanceService', () => {
         {
           uin: '55555556',
           sessionId: '20251007',
+          takenBy: 'admin',
         },
         'admin'
       );
@@ -169,10 +176,13 @@ describe('AttendanceService', () => {
         action: 'EDIT'
       });
 
-      expect(logs[0].changes).toHaveLength(2);
-      const fields = logs[0].changes.map(c => c.field);
+      // uin, sessionId, takenBy, date all changed
+      expect(logs[0].changes.length).toBeGreaterThanOrEqual(3);
+      const fields = logs[0].changes.map((c: any) => c.field);
       expect(fields).toContain('uin');
       expect(fields).toContain('sessionId');
+      expect(fields).toContain('takenBy');
+      expect(fields).toContain('date');
     });
   });
 

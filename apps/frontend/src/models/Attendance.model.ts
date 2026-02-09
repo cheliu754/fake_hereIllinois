@@ -3,13 +3,12 @@ export interface Attendance {
   uin: string;
   sessionId: string;
   date: string;
-  takenBy: string; // Read-only field, cannot be modified via PATCH
+  takenBy: string;
 }
 
 export interface AttendanceFormData {
   uin: string;
   sessionId: string;
   takenBy: string;
-  operationUser?: string; // Required for update operations
-  date?: string; // Optional date field
+  operationUser?: string; // Required for update operations (becomes new takenBy)
 }

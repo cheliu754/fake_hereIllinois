@@ -38,7 +38,7 @@ export class AttendanceService {
 
   async update(
     id: string,
-    data: Partial<IAttendance>,
+    data: Pick<IAttendance, 'uin' | 'sessionId' | 'takenBy'>,
     operationUser: string
   ): Promise<IAttendanceDocument | null> {
     const session = await mongoose.startSession();
@@ -60,26 +60,29 @@ export class AttendanceService {
           takenBy: existing.takenBy,
         };
 
-        const changes: IChange[] = [];
-        for (const key of Object.keys(data) as (keyof IAttendance)[]) {
-          if (data[key] === undefined) continue;
+        // Full replacement: compare all fields for change tracking
+        const replacementData: IAttendance = {
+          uin: data.uin,
+          sessionId: data.sessionId,
+          takenBy: data.takenBy,
+        };
 
-          if (normalizeValueForDiff(data[key]) !== normalizeValueForDiff((existing as any)[key])) {
+        const changes: IChange[] = [];
+        for (const key of ['uin', 'sessionId', 'takenBy'] as (keyof IAttendance)[]) {
+          if (normalizeValueForDiff(replacementData[key]) !== normalizeValueForDiff((existing as any)[key])) {
             changes.push({
               field: key,
               oldValue: (existing as any)[key],
-              newValue: data[key],
+              newValue: replacementData[key],
             });
           }
         }
 
-        // Skip update if no actual changes
-        if (changes.length === 0) {
-          updated = existing;
-          return;
-        }
-
-        Object.assign(existing, data);
+        // Full replacement: overwrite all fields and reset date
+        existing.uin = data.uin;
+        existing.sessionId = data.sessionId;
+        existing.takenBy = data.takenBy;
+        existing.date = new Date();
         updated = await existing.save({ session });
 
         const after: IAttendance = {
@@ -88,6 +91,13 @@ export class AttendanceService {
           date: updated.date,
           takenBy: updated.takenBy,
         };
+
+        // Always log for PUT (date always changes)
+        changes.push({
+          field: 'date',
+          oldValue: before.date,
+          newValue: updated.date,
+        });
 
         await Log.create([{
           attendanceId: id,

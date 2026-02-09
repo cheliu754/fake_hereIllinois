@@ -41,6 +41,10 @@ export function AttendancePage() {
       }
       
       console.log("[AttendancePage] Extracted records:", recordsData);
+      // Sort by date descending (newest first)
+      recordsData.sort((a: Attendance, b: Attendance) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
       setRecords(recordsData);
     } catch (error) {
       console.error("[AttendancePage] Failed to fetch attendance records:", error);
@@ -67,7 +71,9 @@ export function AttendancePage() {
       await fetchRecords();
     } catch (error) {
       console.error("[AttendancePage] Failed to submit attendance record:", error);
-      if (error instanceof ApiError) {
+      if (error instanceof ApiError && error.status === 409) {
+        toast.error("This student's attendance has already been taken for this session");
+      } else if (error instanceof ApiError) {
         toast.error(`Failed to save record: ${error.message}`);
       } else {
         toast.error("Failed to save attendance record");
